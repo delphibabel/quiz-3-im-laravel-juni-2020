@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\AuthModel;
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Symfony\Component\VarDumper\VarDumper;
 
 class LoginController extends Controller
 {
@@ -19,22 +21,33 @@ class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers;
-
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = RouteServiceProvider::HOME;
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    function index()
     {
-        $this->middleware('guest')->except('logout');
+        return view('auth');
+    }
+    public function store(Request $request)
+    {
+        $email = $request->email;
+        $password = $request->password;
+        $data = AuthModel::where('email', $email)->first();
+        if ($data) {
+            if ($password == $data->password) {
+                echo "password benar";
+                Session::put('name', $data->name);
+                Session::put('email', $data->email);
+                Session::put('user_id', $data->user_id);
+                Session::put('login', TRUE);
+                return redirect('/');
+            } else {
+                return redirect('auth')->with('alert', 'Password yang anda masukan salah');
+            }
+        } else {
+            return redirect('auth')->with('alert', 'Email tidak terdaftar');
+        }
+    }
+    public function logout()
+    {
+        Session::flush();
+        return redirect('auth')->with('alert', 'Kamu sudah logout');
     }
 }
